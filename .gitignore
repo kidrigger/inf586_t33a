@@ -1,4 +1,5 @@
 *.pem
 *.bin
 *.pyc
+*.cert
 __pycache__/
