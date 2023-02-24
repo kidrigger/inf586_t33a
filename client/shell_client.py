@@ -1,16 +1,14 @@
 # based on https://realpython.com/python-sockets/#echo-client
 
 import socket
-from sys import argv
-from myutil import crypt_sendall, crypt_sendfile, rsa_encrypt, store_pub_key
+from myutil import crypt_recv, crypt_sendall, rsa_encrypt, store_pub_key
 
 HOST = "127.0.0.1"  # The server's hostname or IP address
-PORT = 1603  # The port used by the server
+PORT = 4567  # The port used by the server
 
 if __name__ == '__main__':
     PUBKEYFILE = 'public.pem'
     KEY = 'uninspiredpasskey'
-    TO_SEND = argv[1]
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
         print("Connected!")
@@ -20,8 +18,15 @@ if __name__ == '__main__':
         store_pub_key(data, PUBKEYFILE)
         s.sendall(rsa_encrypt(KEY, PUBKEYFILE))
         print("Encryption ready!")
-        crypt_sendall(s, TO_SEND, KEY)
-        print("Sending file")
-        crypt_sendfile(s, TO_SEND, KEY)
+        while True:
+            cmd = ""
+            try:
+                cmd = input("$> ")
+            except EOFError:
+                break
+            if cmd in ("exit", "quit"):
+                break
+            crypt_sendall(s, cmd, KEY)
+            print(crypt_recv(s, 2048, KEY))
 
-    print(f"Finished transfer of {TO_SEND}.")
+    print(f"Shell exit.")

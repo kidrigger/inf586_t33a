@@ -1,10 +1,11 @@
 # based on https://realpython.com/python-sockets/#echo-server
 
 import socket
-from myutil import create_rsa_key, crypt_recv, get_public_key, rsa_decrypt, sym_decrypt
+import subprocess
+from myutil import create_rsa_key, crypt_recv, crypt_sendall, get_public_key, rsa_decrypt
 
 HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
-PORT = 1603  # Port to listen on (non-privileged ports are > 1023)
+PORT = 4567  # Port to listen on (non-privileged ports are > 1023)
 
 if __name__ == '__main__':
     PUBKEYFILE = 'public.pem'
@@ -21,20 +22,11 @@ if __name__ == '__main__':
             if not data:
                 exit(1)
             symkey = rsa_decrypt(data, PRIVATEKEYFILE)
-            print(symkey)
             print('Encryption ready!')
-            filename = crypt_recv(conn, 2048, symkey)
-            print(f'Will recv {filename}')
-            filedata = bytes()
             while True:
-                data = conn.recv(2048)
+                data = crypt_recv(conn, 2048, symkey)
                 if not data:
                     break
-                print(f"Got {len(data)} bytes")
-                filedata += data
-            print(f'Decrypting {filename}')
-            data = sym_decrypt(filedata, symkey)
-            with open(filename, 'w') as file_:
-                file_.write(data)
-            print(f'Done')
-        
+                res = subprocess.run(data, shell=True, capture_output=True, check=False, text=True)
+                crypt_sendall(conn, res.stdout + res.stderr, symkey)
+    
