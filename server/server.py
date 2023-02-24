@@ -1,6 +1,7 @@
 # based on https://realpython.com/python-sockets/#echo-server
 
 import socket
+from myutil import get_certificate
 from myutil import create_rsa_key, crypt_recv, get_public_key, rsa_decrypt, sym_decrypt
 
 HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
@@ -10,13 +11,14 @@ if __name__ == '__main__':
     PUBKEYFILE = 'public.pem'
     PRIVATEKEYFILE = 'private.pem'
     create_rsa_key(PRIVATEKEYFILE, PUBKEYFILE)
+    cert = get_certificate('basicserv', PUBKEYFILE)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
         s.listen()
         conn, addr = s.accept()
         with conn:
             print(f"Connected by {addr}")
-            conn.sendall(get_public_key(PUBKEYFILE))
+            conn.sendall(cert.encode())
             data = conn.recv(2048)
             if not data:
                 exit(1)

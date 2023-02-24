@@ -14,9 +14,6 @@ def rsa_encrypt(data: str, pubkeyfile: str) -> bytes:
 def rsa_decrypt(data: bytes, privatekeyfile: str) -> str:
     return subprocess.run(['openssl', 'rsautl', '-decrypt', '-inkey', privatekeyfile], input=data, capture_output=True, check=True).stdout.decode()
 
-def store_pub_key(data: bytes, pubkeyfile: str):
-    with open(pubkeyfile, 'wb') as file_:
-        file_.write(data)
 
 def sym_encrypt(data: str, key: str) -> bytes:
     return subprocess.run(['openssl', 'enc', '-aes-256-cbc', '-base64', '-pbkdf2', '-k', key], input=data.encode(), capture_output=True, check=True).stdout
@@ -41,3 +38,20 @@ def crypt_sendfile(conn: socket.socket, filename: str, key: str):
 def get_public_key(pubkeyfile: str):
     with open(pubkeyfile, 'rb') as pubkey:
         return pubkey.read()
+    
+def store_pub_key(data: bytes, pubkeyfile: str):
+    with open(pubkeyfile, 'wb') as file_:
+        file_.write(data)
+
+def get_certificate(id: str, pubkeyfile: str):
+    return subprocess.run(['python3', '../certgen/certgen_hc.py', id, pubkeyfile], capture_output=True, check=True, text=True).stdout.strip()
+
+def store_certificate(cert: str, certificatefile: str):
+    with open(certificatefile, 'w') as file_:
+        file_.write(cert)
+
+def verify_certificate(certfile: str, id: str) -> str:
+    pubkey = subprocess.run(['python3', '../certgen/certify_hc.py', id, certfile], capture_output=True, check=True, text=True).stdout
+    if not pubkey:
+        return None
+    return pubkey
