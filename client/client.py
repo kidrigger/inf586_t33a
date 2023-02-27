@@ -4,14 +4,14 @@ import socket
 from sys import argv
 from myutil import crypt_sendall, crypt_sendfile, rsa_encrypt, store_certificate, store_pub_key, verify_certificate
 
-HOST = "127.0.0.1"  # The server's hostname or IP address
-PORT = 1603  # The port used by the server
+HOST = argv[1]  # The server's hostname or IP address
+PORT = int(argv[2])  # The port used by the server
 
 if __name__ == '__main__':
     PUBKEYFILE = 'public.pem'
     CERTIFICATEFILE = 'cert1.cert'
     KEY = 'uninspiredpasskey'
-    TO_SEND = argv[1]
+    TO_SEND = argv[3]
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
         print("Connected!")
@@ -19,7 +19,7 @@ if __name__ == '__main__':
         if not data:
             exit(1)
         store_certificate(data.decode(), CERTIFICATEFILE)
-        pubkey = verify_certificate(CERTIFICATEFILE, 'basicserv')
+        pubkey = verify_certificate(CERTIFICATEFILE, HOST)
         if not pubkey or pubkey.strip() == '':
             exit(1)
         store_pub_key(pubkey.encode(), PUBKEYFILE)

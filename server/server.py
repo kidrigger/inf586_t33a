@@ -3,15 +3,16 @@
 import socket
 from myutil import get_certificate
 from myutil import create_rsa_key, crypt_recv, get_public_key, rsa_decrypt, sym_decrypt
+from sys import argv
 
-HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
-PORT = 1603  # Port to listen on (non-privileged ports are > 1023)
+HOST = argv[1]  # Standard loopback interface address (localhost)
+PORT = int(argv[2])  # Port to listen on (non-privileged ports are > 1023)
 
 if __name__ == '__main__':
     PUBKEYFILE = 'public.pem'
     PRIVATEKEYFILE = 'private.pem'
     create_rsa_key(PRIVATEKEYFILE, PUBKEYFILE)
-    cert = get_certificate('basicserv', PUBKEYFILE)
+    cert = get_certificate(HOST, PUBKEYFILE)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
         s.listen()
